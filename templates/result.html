@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Match Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <h1>Resume and Job Description Match Results</h1>
+
+    <div class="result-container">
+        <p><strong>Match Score:</strong></p>
+        <div class="match-bar">
+            <div class="match-fill" style="width: {{ score }}%;"></div>
+            <span class="match-score-label">{{ score }}%</span>
+        </div>
+
+        <h3>Matching Skills</h3>
+        {% if matched_keywords %}
+            <p>{{ matched_keywords | join(', ') }}</p>
+        {% else %}
+            <p>No matching skills found.</p>
+        {% endif %}
+
+        <h3>Missing (Required) Skills</h3>
+        {% if missing_keywords %}
+            <p>{{ missing_keywords | join(', ') }}</p>
+        {% else %}
+            <p><em>Your resume covers all required skills!</em></p>
+        {% endif %}
+    </div>
+
+    <hr />
+    <a href="{{ url_for('index') }}">Try another resume</a>
+</body>
+</html>

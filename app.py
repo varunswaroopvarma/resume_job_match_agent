@@ -1,45 +1,58 @@
-import streamlit as st
-import pathlib
+from flask import Flask, request, render_template, redirect, url_for, flash
+from pathlib import Path
 from resume_parser import extract_resume_text
 from preprocess_text import preprocess_text
 from job_matcher import match_score
 from scoring_highlight import analyze_skills, format_score
 
-def main():
-    st.title("Resume and Job Description Match AI")
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Replace with a secure key
 
-    resume_file = st.file_uploader("Upload your Resume (PDF or TXT)", type=["pdf", "txt"])
-    job_description = st.text_area("Paste Job Description text here")
+UPLOAD_FOLDER = Path('uploads')
+UPLOAD_FOLDER.mkdir(exist_ok=True)
 
-    if resume_file and job_description:
-        filename = resume_file.name
-        dot_index = filename.rfind('.')
-        if dot_index == -1:
-            st.error("Uploaded file must have an extension like .pdf or .txt")
-            return
-        ext = filename[dot_index:]  # e.g., ".pdf" or ".txt"
+ALLOWED_EXTENSIONS = {'pdf', 'txt'}
 
-        temp_filename = "temp_resume" + ext
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-        with open(temp_filename, "wb") as f:
-            f.write(resume_file.getbuffer())
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        job_description = request.form.get("job_description", "").strip()
+        file = request.files.get("resume_file")
+
+        if not file or file.filename == '':
+            flash('No resume file uploaded')
+            return redirect(request.url)
+
+        if not allowed_file(file.filename):
+            flash('Only PDF or TXT files are allowed')
+            return redirect(request.url)
+
+        if not job_description:
+            flash('Job description is required')
+            return redirect(request.url)
+
+        filename = file.filename
+        filepath = UPLOAD_FOLDER / filename
+        file.save(filepath)
 
         try:
-            resume_raw_text = extract_resume_text(temp_filename)
+            resume_raw_text = extract_resume_text(str(filepath))
         except ValueError as e:
-            st.error(str(e))
-            # Attempt to delete temp file before exit
+            flash(str(e))
             try:
-                pathlib.Path(temp_filename).unlink()
+                filepath.unlink()
             except Exception:
                 pass
-            return
+            return redirect(request.url)
 
-        # Delete the temporary file after extracting text
+        # Delete the temp file after extracting
         try:
-            pathlib.Path(temp_filename).unlink()
+            filepath.unlink()
         except Exception as e:
-            st.warning(f"Could not delete temporary file: {e}")
+            flash(f"Could not delete temporary file: {e}")
 
         resume_processed = preprocess_text(resume_raw_text)
         job_processed = preprocess_text(job_description)
@@ -47,20 +60,16 @@ def main():
         score = match_score(resume_processed, job_processed)
         matched_keywords, missing_keywords = analyze_skills(resume_raw_text, job_description)
 
-        st.subheader("Match Score")
-        st.write(format_score(score))
+        return render_template(
+            "result.html",
+            score=format_score(score),
+            matched_keywords=matched_keywords,
+            missing_keywords=missing_keywords,
+            job_description=job_description,
+            resume_text=resume_raw_text
+        )
 
-        st.subheader("Matching Skills")
-        if matched_keywords:
-            st.write(", ".join(matched_keywords))
-        else:
-            st.write("No matching skills found.")
-
-        st.subheader("Missing (Required) Skills")
-        if missing_keywords:
-            st.write(", ".join(missing_keywords))
-        else:
-            st.success("Your resume covers all required skills!")
+    return render_template("index.html")
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resume and Job Match AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <h1>Resume and Job Description Match AI</h1>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-messages">
+          {% for msg in messages %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data" class="form-container">
+        <label for="resume_file">Upload your Resume (PDF or TXT):</label>
+        <input type="file" id="resume_file" name="resume_file" accept=".pdf,.txt" required />
+
+        <label for="job_description">Paste Job Description:</label>
+        <textarea id="job_description" name="job_description" rows="10" required></textarea>
+
+        <button type="submit">Match Resume</button>
+    </form>
+</body>
+</html>
