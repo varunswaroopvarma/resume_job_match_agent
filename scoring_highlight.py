@@ -1,6 +1,12 @@
 import spacy
 
-nlp = spacy.load("en_core_web_sm")
+# Ensure spaCy model is loaded; download if missing
+try:
+    nlp = spacy.load("en_core_web_sm")
+except:
+    import subprocess
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
 
 def extract_keywords(text):
     """
