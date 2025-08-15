@@ -1,9 +1,29 @@
-# Python
+# Python cache files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Virtual environment
 venv/
+env/
+ENV/
 
-# Environment files
+# Environment variables
 .env
+
+# Jupyter Notebook checkpoints (if any)
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Streamlit temporary files
+.streamlit/
+
+# Logs
+*.log
+
+# Pytest cache
+.pytest_cache/
